@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
 import 'package:saise_de_temps/models/text_options_model.dart';
@@ -34,42 +35,45 @@ class TextFormWidget extends FormField<String> {
                   state.didChange("");
                 }
               });
-              return Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      question.text!,
-                      style: TextStyle(
-                          fontSize: textOptionModel!.size!),
-                    ),
-                    TextFormField(
-                      maxLength: textOptionModel.maxLength,
-                      controller: textEditingController,
-                      validator: (text) {
-                        if (text!.isEmpty) {
-                          return "Field should not be empty";
-                        } else {
-                          if(text.length<textOptionModel.minLength!) {
-                           return "Text length should be greater then"+textOptionModel.minLength!.toString();
-                          }
-                        }
-                      },
-                      onSaved: (String? value){
-                        DB.db.saveField(question.id, value);
-                      },
-                      decoration: InputDecoration(
-                        labelText: textOptionModel.value,
+              return Container(
+                margin: EdgeInsets.only(top:10),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        question.text!,
+                        style: TextStyle(
+                            fontSize: textOptionModel!.size!),
                       ),
-                      style:
-                          TextStyle(fontSize: textOptionModel.size!),
-                      keyboardType: question.type == "text"
-                          ? TextInputType.text
-                          : TextInputType.number,
-                    ),
-                  ],
+                      TextFormField(
+                        maxLength: textOptionModel.maxLength,
+                        controller: textEditingController,
+                        validator: (text) {
+                          if (text!.isEmpty) {
+                            return "Field should not be empty";
+                          } else {
+                            if(text.length<textOptionModel.minLength!) {
+                             return "Text length should be greater then"+textOptionModel.minLength!.toString();
+                            }
+                          }
+                        },
+                        onSaved: (String? value){
+                          DB.db.saveField(question.id, value);
+                        },
+                        decoration: InputDecoration(
+                          labelText: textOptionModel.value,
+                        ),
+                        style:
+                            TextStyle(fontSize: textOptionModel.size!),
+                        keyboardType: question.type == "text"
+                            ? TextInputType.text
+                            : TextInputType.number,
+                      ),
+                    ],
+                  ),
                 ),
               );
             });

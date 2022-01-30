@@ -47,7 +47,7 @@ class DropDownFormField extends FormField<String> {
                               color: Colors.redAccent,
                               fontSize: dropDownOptionModel.size!),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
+                            borderRadius: BorderRadius.circular(5.0),
                           ),
                         ),
                         child: DropdownButtonHideUnderline(

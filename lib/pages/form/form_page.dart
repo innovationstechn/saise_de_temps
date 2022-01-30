@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:saise_de_temps/models/checkbox_options_model.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
-import 'package:saise_de_temps/pages/form_page_viewmodel.dart';
+import 'package:saise_de_temps/pages/form/form_page_viewmodel.dart';
 import 'package:saise_de_temps/services/database/db.dart';
 import 'package:saise_de_temps/services/database/hive_db.dart';
 import 'package:saise_de_temps/widgets/checkbox_form_widget.dart';
@@ -10,7 +10,7 @@ import 'package:saise_de_temps/widgets/text_form_widget.dart';
 import 'package:saise_de_temps/widgets/time_form_widget.dart';
 import 'package:stacked/stacked.dart';
 
-class FormPage extends StatelessWidget{
+class FormPage extends StatelessWidget {
   FormPage({Key? key}) : super(key: key);
   final _formKey = GlobalKey<FormState>();
 
@@ -31,71 +31,90 @@ class FormPage extends StatelessWidget{
               onRefresh: () {
                 return formVM.loadData();
               },
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          ListView.builder(
-                            itemCount: formVM.questions.length,
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              FormElementModel item = formVM.questions[index];
-                              switch (item.formType) {
-                                case FormElementType.text:
-                                  return TextFormWidget(
-                                    question: item,
-                                    context: context,
-                                    textEditingController: TextEditingController(),
-                                  );
-                                case FormElementType.number:
-                                  return TextFormWidget(
-                                    question: item,
-                                    context: context,
-                                    textEditingController: TextEditingController(),
-                                  );
-                                case FormElementType.time:
-                                  return TimeSelectionFormField(
-                                    question: item,
-                                    context: context,
-                                  );
-                                case FormElementType.multiple:
-                                  return DropDownFormField(
-                                    question: item,
-                                    context: context,
-                                  );
-                                case FormElementType.checkbox:
-                                  CheckBoxOptionModel checkboxOptionModel =
-                                  item.getCheckBoxModel();
-                                  return CheckboxIconFormField(
-                                    question: item,
-                                    checkBoxOptionModel: checkboxOptionModel,
-                                    initialValue: checkboxOptionModel.value,
-                                    padding: const EdgeInsets.fromLTRB(15, 0, 5, 0),
-                                  );
-                                case FormElementType.unknown:
-                                  return Text(item.text!);
-                              }
-                            },
+              child: FutureBuilder(
+                future: formVM.hasForms,
+                builder:
+                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (!snapshot.hasData) return const Center(child:  CircularProgressIndicator());
+
+                  return CustomScrollView(
+                    slivers: [
+                        SliverToBoxAdapter(
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                if(snapshot.data) Text('Please submit the previous form,')
+                                else ListView.builder(
+                                  itemCount: formVM.questions.length,
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  itemBuilder: (context, index) {
+                                    FormElementModel item =
+                                        formVM.questions[index];
+                                    switch (item.formType) {
+                                      case FormElementType.text:
+                                        return TextFormWidget(
+                                          question: item,
+                                          context: context,
+                                          textEditingController:
+                                              TextEditingController(),
+                                        );
+                                      case FormElementType.number:
+                                        return TextFormWidget(
+                                          question: item,
+                                          context: context,
+                                          textEditingController:
+                                              TextEditingController(),
+                                        );
+                                      case FormElementType.time:
+                                        return TimeSelectionFormField(
+                                          question: item,
+                                          context: context,
+                                        );
+                                      case FormElementType.multiple:
+                                        return DropDownFormField(
+                                          question: item,
+                                          context: context,
+                                        );
+                                      case FormElementType.checkbox:
+                                        CheckBoxOptionModel
+                                            checkboxOptionModel =
+                                            item.getCheckBoxModel();
+                                        return CheckboxIconFormField(
+                                          question: item,
+                                          checkBoxOptionModel:
+                                              checkboxOptionModel,
+                                          initialValue:
+                                              checkboxOptionModel.value,
+                                          padding: const EdgeInsets.fromLTRB(
+                                              15, 0, 5, 0),
+                                        );
+                                      case FormElementType.unknown:
+                                        return Text(item.text!);
+                                    }
+                                  },
+                                ),
+                                if (!formVM.isBusy && !snapshot.data)
+                                  buildSubmitButton(context, formVM.submit)
+                                else if(!snapshot.data)
+                                  CircularProgressIndicator(),
+                                buildExtraOptionsTray(snapshot.data, formVM.submit),
+                              ],
+                            ),
                           ),
-                          buildSubmitButton(context),
-                          buildExtraOptionsTray(),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    // fillOverscroll: true, // Set true to change overscroll behavior. Purely preference.
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: buildFooter(),
-                    ),
-                  )
-                ],
+                        ),
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        // fillOverscroll: true, // Set true to change overscroll behavior. Purely preference.
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: buildFooter(),
+                        ),
+                      )
+                    ],
+                  );
+                },
               ),
             );
           },
@@ -104,13 +123,16 @@ class FormPage extends StatelessWidget{
     );
   }
 
-  Widget buildSubmitButton(BuildContext context) => Padding(
+  Widget buildSubmitButton(
+          BuildContext context, void Function(Map<String, dynamic>) onTap) =>
+      Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 2),
         child: ElevatedButton(
           onPressed: () async {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState!.save();
-              await DB.db.addForm();
+              // await DB.db.addForm();
+              onTap({});
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Validation false")));
@@ -130,7 +152,7 @@ class FormPage extends StatelessWidget{
         ),
       );
 
-  Widget buildExtraOptionsTray() => Padding(
+  Widget buildExtraOptionsTray(bool formsAvailable, void Function(Map<String, dynamic>) onTap) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 2),
         child: Row(
           children: [
@@ -141,8 +163,11 @@ class FormPage extends StatelessWidget{
                   backgroundColor: MaterialStateProperty.all(
                     const Color.fromARGB(255, 30, 48, 62),
                   ),
+                  foregroundColor: MaterialStateProperty.all(
+                     Colors.white,
+                  ),
                 ),
-                onPressed: () {},
+                onPressed: formsAvailable ? () => onTap({}) : null,
                 child: const Text('FORCE RESYNC'),
               ),
             ),

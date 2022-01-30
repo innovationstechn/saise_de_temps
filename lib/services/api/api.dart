@@ -4,5 +4,6 @@ import 'package:saise_de_temps/services/api/server_api.dart';
 abstract class API {
   static final api = ServerAPI();
   Future<String> login({required String username, required String password});
+  Future<void> submit({required List<Map> data});
   Future<List<FormElementModel>> getConfig();
 }

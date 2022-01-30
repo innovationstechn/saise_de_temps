@@ -24,20 +24,26 @@ class ServerAPI implements API {
   @override
   Future<String> login(
       {required String username, required String password}) async {
-    try {
-      final response = await _dio.get(
-        '/login',
-        options: Options(
-          headers: {
-            'Authorization': 'Basic ${_base64Encode("$username:$password")}'
-          },
-        ),
-      );
+    Future<String> _login(String username, String password) async {
+      try {
+        final response = await _dio.get(
+          '/login',
+          options: Options(
+            headers: {
+              'Authorization': 'Basic ${_base64Encode("$username:$password")}'
+            },
+          ),
+        );
 
-      return response.data['token'];
-    } catch (e) {
-      rethrow;
+        return response.data['token'];
+      } catch (e) {
+        rethrow;
+      }
     }
+
+    token = await _login(username, password);
+
+    return token!;
   }
 
   @override
@@ -54,6 +60,22 @@ class ServerAPI implements API {
           .map((e) => FormElementModel.fromJson(e))
           .toList()
           .cast<FormElementModel>();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> submit({required List<Map> data}) async {
+    try {
+      print(data);
+      final response = await _dio.post(
+        '/submit',
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+        data: data,
+      );
     } catch (e) {
       rethrow;
     }
