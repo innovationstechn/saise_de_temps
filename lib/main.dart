@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:saise_de_temps/pages/form_page.dart';
-import 'package:saise_de_temps/services/api/api.dart';
 import 'package:saise_de_temps/services/api/server_api.dart';
 
 void main() async {
   await ServerAPI.api.initialize();
+  WidgetsFlutterBinding.ensureInitialized();
+  var dir = await getApplicationDocumentsDirectory();
+  Hive.init(dir.path);
   runApp(const MyApp());
 }
 
@@ -28,7 +32,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const FormPage(),
+      home: FormPage(),
     );
   }
 }

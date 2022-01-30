@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:saise_de_temps/models/checkbox_options_model.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
 import 'package:saise_de_temps/pages/form_page_viewmodel.dart';
+import 'package:saise_de_temps/services/database/hive_db.dart';
 import 'package:saise_de_temps/widgets/checkbox_form_widget.dart';
-import 'package:saise_de_temps/widgets/time_form_widget.dart';
 import 'package:saise_de_temps/widgets/dropdown_form_widget.dart';
 import 'package:saise_de_temps/widgets/text_form_widget.dart';
+import 'package:saise_de_temps/widgets/time_form_widget.dart';
 import 'package:stacked/stacked.dart';
 
-class FormPage extends StatelessWidget {
-  const FormPage({Key? key}) : super(key: key);
+import '../validator_mixin.dart';
+
+class FormPage extends StatelessWidget with Validator {
+  FormPage({Key? key}) : super(key: key);
+  final _formKey = GlobalKey<FormState>();
+  final Map myMap= {};
 
   @override
   Widget build(BuildContext context) {
@@ -23,61 +30,113 @@ class FormPage extends StatelessWidget {
                 child: CircularProgressIndicator(),
               );
             }
-
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Form(
-                    child: Column(
-                      children: [
-                        ListView.builder(
-                          itemCount: formVM.questions.length,
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            FormElementModel item = formVM.questions[index];
-
-                            switch (item.formType) {
-                              case FormElementType.text:
-                                return TextFormWidget(question: item);
-                              case FormElementType.number:
-                                return TextFormWidget(
-                                  question: item,
-                                  textType: TextInputType.number,
-                                );
-
-                              case FormElementType.multiple:
-                                return DropDownFormWidget(
-                                  question: item,
-                                );
-                              case FormElementType.checkbox:
-                                return CheckboxIconFormField(
-                                  question: item,
-                                  padding:
-                                      const EdgeInsets.fromLTRB(15, 0, 5, 0),
-                                );
-                              case FormElementType.time:
-                                return TimeFormWidget(question: item);
-                              case FormElementType.unknown:
-                                return Text(item.text!);
-                            }
-                          },
-                        ),
-                        buildSubmitButton(),
-                        buildExtraOptionsTray(),
-                      ],
+            return RefreshIndicator(
+              onRefresh: (){
+                return formVM.loadData();
+              },
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          ListView.builder(
+                            itemCount: formVM.questions.length,
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              FormElementModel item = formVM.questions[index];
+                              switch (item.formType) {
+                                case FormElementType.text:
+                                  return TextFormWidget(
+                                    question: item,
+                                    context: context,
+                                    textOptionModel: item.getTextOptionModel(),
+                                    textEditingController:
+                                        TextEditingController(),
+                                    onSaved: (String? value) {
+                                      myMap[item.id.toString()] = value;
+                                    },
+                                    validator: (String? value) {
+                                      // print("I am also here");
+                                      return textValidator(value);
+                                    },
+                                  );
+                                case FormElementType.number:
+                                  return TextFormWidget(
+                                    question: item,
+                                    context: context,
+                                    textOptionModel: item.getTextOptionModel(),
+                                    textEditingController:
+                                        TextEditingController(),
+                                    onSaved: (String? value) {
+                                      myMap[item.id.toString()] = value;
+                                    },
+                                    validator: (String? value) {
+                                      return numberValidator(
+                                          int.tryParse(value!));
+                                    },
+                                  );
+                                case FormElementType.checkbox:
+                                  CheckBoxOptionModel checkboxOptionModel = item.getCheckBoxModel();
+                                  return CheckboxIconFormField(
+                                    question: item,
+                                    checkBoxOptionModel: checkboxOptionModel,
+                                    initialValue: checkboxOptionModel.value,
+                                    padding:
+                                        const EdgeInsets.fromLTRB(15, 0, 5, 0),
+                                    onSaved: (bool? value) {},
+                                    validator: (bool? value) {
+                                      myMap[item.id.toString()] = value;
+                                      return boolValidator(value);
+                                    },
+                                  );
+                                case FormElementType.time:
+                                  return TimeSelectionFormField(
+                                    question: item,
+                                    context: context,
+                                    timeOptionModel: item.getTimeOptionModel(),
+                                    onSaved: (String? value) {
+                                      myMap[item.id.toString()] = value;
+                                    },
+                                    validator: (String? value) {
+                                      return textValidator(value);
+                                    },
+                                  );
+                                case FormElementType.multiple:
+                                  return DropDownFormField(
+                                    question:item,
+                                    context:context,
+                                    dropDownOptionModel:item.getDropDownOptionModel(),
+                                    onSaved: (String? value) {
+                                      myMap[item.id.toString()] = value;
+                                    },
+                                    validator: (String? value) {
+                                      return textValidator(value);
+                                    },
+                                  );
+                                case FormElementType.unknown:
+                                  return Text(item.text!);
+                              }
+                            },
+                          ),
+                          buildSubmitButton(context),
+                          buildExtraOptionsTray(),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  // fillOverscroll: true, // Set true to change overscroll behavior. Purely preference.
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: buildFooter(),
-                  ),
-                )
-              ],
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    // fillOverscroll: true, // Set true to change overscroll behavior. Purely preference.
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: buildFooter(),
+                    ),
+                  )
+                ],
+              ),
             );
           },
         ),
@@ -85,13 +144,22 @@ class FormPage extends StatelessWidget {
     );
   }
 
-  Widget buildSubmitButton() => Padding(
+  Widget buildSubmitButton(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 2),
         child: ElevatedButton(
-          onPressed: () {},
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+                _formKey.currentState!.save();
+                await HiveDB().addForm(myMap);
+                myMap.clear();
+            } else {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text("Validation false")));
+            }
+          },
           style: ButtonStyle(
             backgroundColor: MaterialStateProperty.all(
-              Color.fromARGB(255, 30, 48, 62),
+              const Color.fromARGB(255, 30, 48, 62),
             ),
           ),
           child: Row(
@@ -112,7 +180,7 @@ class FormPage extends StatelessWidget {
               child: ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(
-                    Color.fromARGB(255, 30, 48, 62),
+                    const Color.fromARGB(255, 30, 48, 62),
                   ),
                 ),
                 onPressed: () {},
@@ -134,18 +202,20 @@ class FormPage extends StatelessWidget {
   Widget buildFooter() => Container(
         height: 100,
         width: double.infinity,
-        color: Color.fromARGB(255, 30, 48, 62),
-        margin: EdgeInsets.only(top: 20),
-        padding: EdgeInsets.all(8),
+        color: const Color.fromARGB(255, 30, 48, 62),
+        margin: const EdgeInsets.only(top: 20),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+          children: const [
             Text(
               'Saise-De-Temps',
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
-            SizedBox(height: 10,),
+            SizedBox(
+              height: 10,
+            ),
             Text(
               'v0.0.1',
               style: TextStyle(color: Colors.white, fontSize: 14),
@@ -153,4 +223,15 @@ class FormPage extends StatelessWidget {
           ],
         ),
       );
+
 }
+
+// ElevatedButton(
+// onPressed: () {
+// if(_formKey.currentState!.validate()){
+// print("Validation done");
+// }
+// else
+// print("Failed");
+// },
+// child: Text("Click me")),
