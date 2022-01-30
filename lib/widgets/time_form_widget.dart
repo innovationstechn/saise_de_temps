@@ -3,20 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
 import 'package:saise_de_temps/models/time_options_model.dart';
-import 'package:saise_de_temps/validator_mixin.dart';
+import 'package:saise_de_temps/services/database/db.dart';
 
-class TimeSelectionFormField extends FormField<String> with Validator {
+class TimeSelectionFormField extends FormField<String> {
   final FormElementModel? question;
-  final TimeOptionModel? timeOptionModel;
   final BuildContext? context;
 
   TimeSelectionFormField(
       {Key? key,
       this.question,
       this.context,
-      this.timeOptionModel,
-      required FormFieldSetter<String>? onSaved,
-      required FormFieldValidator<String>? validator,
+      FormFieldSetter<String>? onSaved,
+      FormFieldValidator<String>? validator,
       String? initialValue = "",
       bool? showError = false,
       AutovalidateMode autovalidate = AutovalidateMode.disabled})
@@ -27,6 +25,8 @@ class TimeSelectionFormField extends FormField<String> with Validator {
             initialValue: initialValue,
             autovalidateMode: autovalidate,
             builder: (FormFieldState<String> state) {
+              TimeOptionModel? timeOptionModel = question!.getTimeOptionModel();
+
               return Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -34,9 +34,9 @@ class TimeSelectionFormField extends FormField<String> with Validator {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      question!.text!,
+                      question.text!,
                       style: TextStyle(
-                          fontSize: timeOptionModel!.size!),
+                          fontSize: timeOptionModel.size!),
                     ),
                     InkWell(
                       onTap: () {
@@ -61,9 +61,6 @@ class TimeSelectionFormField extends FormField<String> with Validator {
                           errorStyle: TextStyle(
                               color: Colors.redAccent,
                               fontSize: timeOptionModel.size!),
-                          // border: OutlineInputBorder(
-                          //   borderRadius: BorderRadius.circular(10.0),
-                          // )
                         ),
                         child: Container(
                             margin: const EdgeInsets.symmetric(vertical: 10),
@@ -89,7 +86,11 @@ class TimeSelectionFormField extends FormField<String> with Validator {
                                     validator: (text) {
                                       if (state.value!.isEmpty) {
                                         showError = true;
+                                        return "Time Not selected";
                                       }
+                                    },
+                                    onSaved: (text){
+                                      DB.db.saveField(question.id, state.value!);
                                     },
                                   ),
                                 ),

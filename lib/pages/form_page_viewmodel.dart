@@ -1,4 +1,5 @@
 import 'package:saise_de_temps/models/form_element_model.dart';
+import 'package:saise_de_temps/services/api/api.dart';
 import 'package:saise_de_temps/services/api/server_api.dart';
 import 'package:stacked/stacked.dart';
 
@@ -8,7 +9,7 @@ class FormPageVM extends BaseViewModel {
 
   Future<void> loadData() async {
     Future<void> _loadData() async {
-      _questions = await ServerAPI.api.getConfig();
+      _questions = await API.api.getConfig();
     }
 
     runBusyFuture(_loadData());

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:saise_de_temps/models/checkbox_options_model.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
+import 'package:saise_de_temps/services/database/db.dart';
 
 class CheckboxIconFormField extends FormField<bool> {
   final FormElementModel question;
@@ -9,8 +10,8 @@ class CheckboxIconFormField extends FormField<bool> {
   CheckboxIconFormField({
     required this.question,
     required this.checkBoxOptionModel,
-    required FormFieldSetter<bool?> onSaved,
-    required FormFieldValidator<bool?> validator,
+    FormFieldSetter<bool?>? onSaved,
+    FormFieldValidator<bool?>? validator,
     Key? key,
     BuildContext? context,
     bool? initialValue,
@@ -40,8 +41,7 @@ class CheckboxIconFormField extends FormField<bool> {
                 children: [
                   Text(
                     question.text!,
-                    style: TextStyle(
-                        fontSize: checkBoxOptionModel.size!),
+                    style: TextStyle(fontSize: checkBoxOptionModel.size!),
                   ),
                   const Spacer(),
                   state.value!
@@ -62,7 +62,16 @@ class CheckboxIconFormField extends FormField<bool> {
                           falseIconColor,
                           disabledColor,
                           iconSize,
-                        )
+                        ),
+                  SizedBox(
+                      height: 0,
+                      width: 0,
+                      child: TextFormField(
+                    validator: (text) {},
+                    onSaved: (text) {
+                      DB.db.saveField(question.id, state.value.toString());
+                    },
+                  )),
                 ],
               ),
             );

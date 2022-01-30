@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:saise_de_temps/models/dropdown_options_model.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
+import 'package:saise_de_temps/services/database/db.dart';
 
 class DropDownFormField extends FormField<String> {
   final FormElementModel? question;
   final BuildContext? context;
-  final DropDownOptionModel? dropDownOptionModel;
 
   DropDownFormField(
       {Key? key,
       this.question,
       this.context,
-      this.dropDownOptionModel,
       bool? showError = false,
-      required FormFieldSetter<String> onSaved,
-      required FormFieldValidator<String> validator,
+      FormFieldSetter<String>? onSaved,
+      FormFieldValidator<String>? validator,
       AutovalidateMode autovalidate = AutovalidateMode.disabled})
       : super(
             key: key,
@@ -22,13 +21,19 @@ class DropDownFormField extends FormField<String> {
             validator: validator,
             autovalidateMode: autovalidate,
             builder: (FormFieldState<String> state) {
+              DropDownOptionModel? dropDownOptionModel =
+                  question!.getDropDownOptionModel();
+
               return Center(
                 child: Container(
                   margin: const EdgeInsets.only(left: 15, top: 10, right: 15),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(question!.text!,style: TextStyle(fontSize: dropDownOptionModel!.size!),),
+                      Text(
+                        question.text!,
+                        style: TextStyle(fontSize: dropDownOptionModel.size!),
+                      ),
                       const SizedBox(
                         height: 15,
                       ),
@@ -36,9 +41,11 @@ class DropDownFormField extends FormField<String> {
                         decoration: InputDecoration(
                           contentPadding:
                               const EdgeInsets.fromLTRB(12, 0, 20, 0),
-                          errorText: showError==true?"Item not selected":null,
+                          errorText:
+                              showError == true ? "Item not selected" : null,
                           errorStyle: TextStyle(
-                              color: Colors.redAccent, fontSize: dropDownOptionModel.size!),
+                              color: Colors.redAccent,
+                              fontSize: dropDownOptionModel.size!),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.0),
                           ),
@@ -65,7 +72,12 @@ class DropDownFormField extends FormField<String> {
                                   value: value!,
                                   child: Row(
                                     children: [
-                                      Text(value,style: TextStyle(fontSize: dropDownOptionModel.size!),),
+                                      Text(
+                                        value,
+                                        style: TextStyle(
+                                            fontSize:
+                                                dropDownOptionModel.size!),
+                                      ),
                                     ],
                                   ),
                                 );
@@ -86,13 +98,16 @@ class DropDownFormField extends FormField<String> {
                         width: 0,
                         child: TextFormField(
                           validator: (text) {
-                            if (state.value==null) {
+                            if (state.value == null) {
                               showError = true;
+                              return "Not valid";
                             }
+                          },
+                          onSaved: (text){
+                            DB.db.saveField(question.id,state.value!);
                           },
                         ),
                       ),
-
                     ],
                   ),
                 ),

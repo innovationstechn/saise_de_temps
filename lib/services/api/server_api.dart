@@ -5,8 +5,6 @@ import 'package:saise_de_temps/models/form_element_model.dart';
 import 'package:saise_de_temps/services/api/api.dart';
 
 class ServerAPI implements API {
-  static final api = ServerAPI();
-
   final Dio _dio = Dio(
     BaseOptions(baseUrl: 'http://135.125.206.72:5000'),
   );
