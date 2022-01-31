@@ -6,7 +6,7 @@ import 'package:saise_de_temps/services/api/api.dart';
 
 class ServerAPI implements API {
   final Dio _dio = Dio(
-    BaseOptions(baseUrl: 'http://135.125.206.72:5000'),
+    BaseOptions(baseUrl: 'http://135.125.206.72:5432'),
   );
 
   String? token;
