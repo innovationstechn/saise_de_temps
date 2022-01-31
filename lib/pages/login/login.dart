@@ -1,15 +1,24 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:email_validator/email_validator.dart';
+import 'package:saise_de_temps/constants/colors.dart';
 import 'package:saise_de_temps/pages/login/login_viewmodel.dart';
 import 'package:sizer/sizer.dart';
 import 'package:stacked/stacked.dart';
 
-class Login extends StatelessWidget {
-  Login({Key? key}) : super(key: key);
+class Login extends StatefulWidget {
+  const Login({Key? key}) : super(key: key);
+
+  @override
+  State<Login> createState() => _LoginState();
+}
+
+class _LoginState extends State<Login> {
   final GlobalKey<FormState> _loginFormKey = GlobalKey<FormState>();
+
   final TextEditingController emailController = TextEditingController();
+
   final TextEditingController passwordController = TextEditingController();
+
   final FocusNode emailFN = FocusNode(),
       passFN = FocusNode(),
       loginFN = FocusNode();
@@ -20,6 +29,12 @@ class Login extends StatelessWidget {
 
     return ViewModelBuilder<LoginVM>.reactive(
         viewModelBuilder: () => LoginVM(),
+        onModelReady: (loginVM) async {
+          await loginVM.loadPreviousCredentials();
+
+          emailController.text = loginVM.credentials?.name ?? "";
+          passwordController.text = loginVM.credentials?.password ?? "";
+        },
         builder: (context, loginVM, _) {
           return Scaffold(
             body: SafeArea(
@@ -90,7 +105,7 @@ class Login extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 5),
-                              buildLoginButton(context, loginVM.login),
+                              buildLoginButton(context, loginVM),
                             ],
                           ),
                         ),
@@ -111,35 +126,66 @@ class Login extends StatelessWidget {
         });
   }
 
-  Widget buildLoginButton(BuildContext context, Future<void> Function(String, String) onTap) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: SizedBox(
-          height: 50,
-          child: ElevatedButton(
-            focusNode: loginFN,
-            onPressed: () async {
-              if (_loginFormKey.currentState!.validate()) {
-                await onTap(emailController.text,passwordController.text);
+  Widget buildLoginButton(BuildContext context, LoginVM loginVM) {
+    if (loginVM.isBusy) {
+      return const Padding(
+        padding: EdgeInsets.all(8.0),
+        child: CircularProgressIndicator(
+          color: primaryColor,
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: SizedBox(
+        height: 50,
+        child: ElevatedButton(
+          focusNode: loginFN,
+          onPressed: () async {
+            if (_loginFormKey.currentState!.validate()) {
+              await loginVM.login(
+                  emailController.text, passwordController.text);
+
+              if (!loginVM.hasError) {
                 Navigator.of(context).pushNamed('/form');
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("INVALID CREDENTIALS")));
+                  SnackBar(
+                    content: Text(
+                      loginVM.error(loginVM),
+                    ),
+                  ),
+                );
               }
-            },
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(
-                const Color.fromARGB(255, 30, 48, 62),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Text('Login'),
-              ],
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      "Error validating credentials. Please recheck username and password."),
+                ),
+              );
+            }
+          },
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(
+              const Color.fromARGB(255, 30, 48, 62),
             ),
           ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.login),
+              SizedBox(
+                width: 5,
+              ),
+              Text('LOGIN'),
+            ],
+          ),
         ),
-      );
+      ),
+    );
+  }
 
   Widget buildFooter() => Container(
         height: 100,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:saise_de_temps/models/credidentals_model.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
 import 'package:saise_de_temps/services/api/api.dart';
 
@@ -16,14 +17,10 @@ class ServerAPI implements API {
     return base64.encode(bytes);
   }
 
-  Future<void> initialize() async {
-    token = await login(username: "argth", password: "pouet");
-    print(token);
-  }
 
   @override
   Future<String> login(
-      {required String username, required String password}) async {
+      {required CredentialsModel credentials}) async {
     Future<String> _login(String username, String password) async {
       try {
         final response = await _dio.get(
@@ -41,7 +38,7 @@ class ServerAPI implements API {
       }
     }
 
-    token = await _login(username, password);
+    token = await _login(credentials.name, credentials.password);
 
     return token!;
   }
@@ -68,8 +65,7 @@ class ServerAPI implements API {
   @override
   Future<void> submit({required List<Map> data}) async {
     try {
-      print(data);
-      final response = await _dio.post(
+      await _dio.post(
         '/submit',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},

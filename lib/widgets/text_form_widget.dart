@@ -17,13 +17,13 @@ class TextFormWidget extends FormField<String> {
       FormFieldSetter<String>? onSaved,
       FormFieldValidator<String>? validator,
       String initialValue = "",
-      AutovalidateMode autovalidate = AutovalidateMode.disabled})
+      AutovalidateMode autoValidate = AutovalidateMode.disabled})
       : super(
             key: key,
             onSaved: onSaved,
             validator: validator,
             initialValue: initialValue,
-            autovalidateMode: autovalidate,
+            autovalidateMode: autoValidate,
             builder: (FormFieldState<String> state) {
               TextOptionModel? textOptionModel = question!.getTextOptionModel();
 
@@ -36,7 +36,7 @@ class TextFormWidget extends FormField<String> {
                 }
               });
               return Container(
-                margin: EdgeInsets.only(top:10),
+                margin: const EdgeInsets.only(top:10),
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 5),

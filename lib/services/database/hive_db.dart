@@ -1,31 +1,34 @@
 import 'package:hive/hive.dart';
+import 'package:saise_de_temps/models/credidentals_model.dart';
 import 'package:saise_de_temps/services/database/db.dart';
 
 class HiveDB implements DB {
-  static Box? _box;
+  static Box? _formsBox, _credentialsBox;
   static Map map = {};
 
   static Future initializeDB() async {
-    _box = await Hive.openBox('forms');
+    _formsBox = await Hive.openBox('forms');
+    _credentialsBox = await Hive.openBox('credentials');
 
-    final items  = _box!.values.toList().cast<Map>();
+    final items = _formsBox!.values.toList().cast<Map>();
 
-    if(items.isNotEmpty) map = items.first;
+    if (items.isNotEmpty) map = items.first;
   }
 
+  @override
   Future clear() async {
-    _box!.clear();
+    _formsBox!.clear();
   }
 
   @override
   Future<bool?> addForm() async {
-    _box!.add(map);
+    _formsBox!.add(map);
     return true;
   }
 
   @override
   Future<bool> hasForms() async {
-    List<Map> forms = _box!.values.toList().cast<Map>();
+    List<Map> forms = _formsBox!.values.toList().cast<Map>();
 
     return forms.isNotEmpty;
   }
@@ -37,5 +40,19 @@ class HiveDB implements DB {
       'id': id,
       'reply': field,
     };
+  }
+
+  @override
+  Future<void> saveCredentials(CredentialsModel credentials) async {
+    _credentialsBox!.put('credentials', credentials.toJson());
+  }
+
+  @override
+  Future<CredentialsModel?> getCredentials() async {
+    return CredentialsModel.fromJson(
+      Map<String, dynamic>.from(
+        _credentialsBox!.get('credentials'),
+      ),
+    );
   }
 }

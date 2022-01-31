@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:saise_de_temps/constants/colors.dart';
 import 'package:saise_de_temps/models/checkbox_options_model.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
 import 'package:saise_de_temps/pages/form/form_page_viewmodel.dart';
-import 'package:saise_de_temps/services/database/db.dart';
-import 'package:saise_de_temps/services/database/hive_db.dart';
 import 'package:saise_de_temps/widgets/checkbox_form_widget.dart';
 import 'package:saise_de_temps/widgets/dropdown_form_widget.dart';
 import 'package:saise_de_temps/widgets/text_form_widget.dart';
@@ -22,33 +21,42 @@ class FormPage extends StatelessWidget {
           viewModelBuilder: () => FormPageVM(),
           onModelReady: (FormPageVM model) => model.loadData(),
           builder: (context, FormPageVM formVM, _) {
+            if (formVM.hasError) {
+              return onErrorWidget(formVM.error(formVM), formVM.loadData);
+            }
+
             if (formVM.isBusy) {
               return const Center(
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(color: primaryColor,),
               );
             }
             return RefreshIndicator(
               onRefresh: () {
                 return formVM.loadData();
               },
+              color: primaryColor,
               child: FutureBuilder(
                 future: formVM.hasForms,
                 builder:
                     (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (!snapshot.hasData) return const Center(child:  CircularProgressIndicator());
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator(color: primaryColor,));
+                  }
 
                   return CustomScrollView(
                     slivers: [
-                        SliverToBoxAdapter(
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                if(snapshot.data) Text('Please submit the previous form,')
-                                else ListView.builder(
+                      SliverToBoxAdapter(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              if (snapshot.data)
+                                const Text('Please submit the previous form,')
+                              else
+                                ListView.builder(
                                   itemCount: formVM.questions.length,
                                   shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
+                                  physics: const NeverScrollableScrollPhysics(),
                                   itemBuilder: (context, index) {
                                     FormElementModel item =
                                         formVM.questions[index];
@@ -95,15 +103,16 @@ class FormPage extends StatelessWidget {
                                     }
                                   },
                                 ),
-                                if (!formVM.isBusy && !snapshot.data)
-                                  buildSubmitButton(context, formVM.submit)
-                                else if(!snapshot.data)
-                                  CircularProgressIndicator(),
-                                buildExtraOptionsTray(snapshot.data, formVM.submit),
-                              ],
-                            ),
+                              if (!formVM.isBusy && !snapshot.data)
+                                buildSubmitButton(context, formVM.submit)
+                              else if (!snapshot.data)
+                                const CircularProgressIndicator(color: primaryColor,),
+                              buildExtraOptionsTray(
+                                  snapshot.data, formVM.submit),
+                            ],
                           ),
                         ),
+                      ),
                       SliverFillRemaining(
                         hasScrollBody: false,
                         // fillOverscroll: true, // Set true to change overscroll behavior. Purely preference.
@@ -135,7 +144,10 @@ class FormPage extends StatelessWidget {
               onTap({});
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Validation false")));
+                const SnackBar(
+                  content: Text("Validation false"),
+                ),
+              );
             }
           },
           style: ButtonStyle(
@@ -146,13 +158,19 @@ class FormPage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
+              Icon(Icons.done),
+              SizedBox(
+                width: 5,
+              ),
               Text('SUBMIT THE APPLICATION'),
             ],
           ),
         ),
       );
 
-  Widget buildExtraOptionsTray(bool formsAvailable, void Function(Map<String, dynamic>) onTap) => Padding(
+  Widget buildExtraOptionsTray(
+          bool formsAvailable, void Function(Map<String, dynamic>) onTap) =>
+      Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 2),
         child: Row(
           children: [
@@ -161,21 +179,30 @@ class FormPage extends StatelessWidget {
               child: ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(
-                    const Color.fromARGB(255, 30, 48, 62),
+                    primaryColor,
                   ),
                   foregroundColor: MaterialStateProperty.all(
-                     Colors.white,
+                    Colors.white,
                   ),
                 ),
                 onPressed: formsAvailable ? () => onTap({}) : null,
-                child: const Text('FORCE RESYNC'),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.sync),
+                    SizedBox(
+                      width: 5,
+                    ),
+                    Text('FORCE RESYNC'),
+                  ],
+                ),
               ),
             ),
             const SizedBox(
               width: 15,
             ),
             const CircleAvatar(
-              backgroundColor: Color.fromARGB(255, 30, 48, 62),
+              backgroundColor: primaryColor,
               foregroundColor: Colors.white,
               child: Icon(Icons.settings),
             ),
@@ -186,7 +213,7 @@ class FormPage extends StatelessWidget {
   Widget buildFooter() => Container(
         height: 100,
         width: double.infinity,
-        color: const Color.fromARGB(255, 30, 48, 62),
+        color: primaryColor,
         margin: const EdgeInsets.only(top: 20),
         padding: const EdgeInsets.all(8),
         child: Column(
@@ -203,6 +230,36 @@ class FormPage extends StatelessWidget {
             Text(
               'v0.0.1',
               style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+
+  Widget onErrorWidget(String errorMsg, void Function() onRefreshTap) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              errorMsg,
+              style: const TextStyle(fontSize: 16),
+            ),
+            ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(primaryColor),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.refresh),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  Text(
+                    'REFRESH',
+                  ),
+                ],
+              ),
+              onPressed: onRefreshTap,
             ),
           ],
         ),
