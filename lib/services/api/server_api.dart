@@ -1,14 +1,28 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:saise_de_temps/constants/globals.dart';
 import 'package:saise_de_temps/models/credidentals_model.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
 import 'package:saise_de_temps/services/api/api.dart';
+import 'package:saise_de_temps/services/api/exceptions.dart';
+import 'package:saise_de_temps/services/database/db.dart';
 
 class ServerAPI implements API {
-  final Dio _dio = Dio(
-    BaseOptions(baseUrl: 'http://135.125.206.72:5432'),
-  );
+  late final BaseOptions _options;
+  Dio? _dio;
+
+  ServerAPI(String ip) {
+    _options = BaseOptions(
+      baseUrl: ip,
+      connectTimeout: API_TIMEOUT_DURATION.inMilliseconds,
+      receiveTimeout: API_TIMEOUT_DURATION.inMilliseconds,
+      sendTimeout: API_TIMEOUT_DURATION.inMilliseconds,
+    );
+
+    _dio = Dio(_options);
+  }
 
   String? token;
 
@@ -17,13 +31,11 @@ class ServerAPI implements API {
     return base64.encode(bytes);
   }
 
-
   @override
-  Future<String> login(
-      {required CredentialsModel credentials}) async {
+  Future<String> login({required CredentialsModel credentials}) async {
     Future<String> _login(String username, String password) async {
       try {
-        final response = await _dio.get(
+        final response = await _dio!.get(
           '/login',
           options: Options(
             headers: {
@@ -33,8 +45,14 @@ class ServerAPI implements API {
         );
 
         return response.data['token'];
-      } catch (e) {
-        rethrow;
+      } on DioError catch (e) {
+        if (e.response?.statusCode == 401) {
+          throw UnauthorisedException(
+              'Unable to log in. Please check your username or password.');
+        } else {
+          throw RequestFailureException(
+              "Sorry, we could not connect with the server. Either that address is invalid, or internet service is unavailable.");
+        }
       }
     }
 
@@ -46,34 +64,71 @@ class ServerAPI implements API {
   @override
   Future<List<FormElementModel>> getConfig() async {
     try {
-      final response = await _dio.get(
+      final response = await _dio!.get(
         '/get_config',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
       );
 
-      return response.data['data']
+      List<FormElementModel> formElements = response.data['data']
           .map((e) => FormElementModel.fromJson(e))
           .toList()
           .cast<FormElementModel>();
-    } catch (e) {
-      rethrow;
+
+      await DB.db.saveConfigData(formElements);
+      await DB.db.saveLastConfigFetchTime(DateTime.now());
+
+      return formElements;
+    } on DioError {
+      final cached = await DB.db.getConfigData();
+
+      if (cached != null) {
+        return cached;
+      }
+
+      throw RequestFailureException(
+          'Sorry, we could not connect with the server.');
     }
   }
 
   @override
   Future<void> submit({required List<Map> data}) async {
+    final responses = data.map((e) => e.values.toList().cast<Map>()).toList();
+
     try {
-      await _dio.post(
+      await _dio!.post(
         '/submit',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
-        data: data,
+        data: responses,
       );
-    } catch (e) {
-      rethrow;
+    } on DioError catch (e) {
+      throw RequestFailureException(
+          'Sorry, we could not connect with the server.');
     }
+  }
+
+  @override
+  Future<bool> checkConnectionToAPI() async {
+    try {
+      await _dio!.get(
+        '/get_config',
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+        ),
+      );
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  @override
+  set apiAddress(String apiAddress) {
+    _options.baseUrl = 'http://$apiAddress';
+    _dio = Dio(_options);
   }
 }

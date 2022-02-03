@@ -5,14 +5,14 @@ import 'package:saise_de_temps/pages/login/login_viewmodel.dart';
 import 'package:sizer/sizer.dart';
 import 'package:stacked/stacked.dart';
 
-class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
+class LoginView extends StatefulWidget {
+  const LoginView({Key? key}) : super(key: key);
 
   @override
-  State<Login> createState() => _LoginState();
+  State<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginState extends State<Login> {
+class _LoginViewState extends State<LoginView> {
   final GlobalKey<FormState> _loginFormKey = GlobalKey<FormState>();
 
   final TextEditingController emailController = TextEditingController();
@@ -146,18 +146,6 @@ class _LoginState extends State<Login> {
             if (_loginFormKey.currentState!.validate()) {
               await loginVM.login(
                   emailController.text, passwordController.text);
-
-              if (!loginVM.hasError) {
-                Navigator.of(context).pushNamed('/form');
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      loginVM.error(loginVM),
-                    ),
-                  ),
-                );
-              }
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

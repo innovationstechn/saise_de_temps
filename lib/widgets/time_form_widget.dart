@@ -35,8 +35,7 @@ class TimeSelectionFormField extends FormField<String> {
                   children: [
                     Text(
                       question.text!,
-                      style: TextStyle(
-                          fontSize: timeOptionModel.size!),
+                      style: TextStyle(fontSize: timeOptionModel.size!),
                     ),
                     InkWell(
                       onTap: () {
@@ -63,39 +62,25 @@ class TimeSelectionFormField extends FormField<String> {
                               fontSize: timeOptionModel.size!),
                         ),
                         child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 10),
-                            height: 100,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(color: Colors.grey[200]),
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                  height: 100,
-                                  child: Center(
-                                    child: Text(
-                                      state.value!,
-                                      style: TextStyle(
-                                          fontSize: timeOptionModel.size!),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 0,
-                                  width: 0,
-                                  child: TextFormField(
-                                    validator: (text) {
-                                      if (state.value!.isEmpty) {
-                                        showError = true;
-                                        return "Time Not selected";
-                                      }
-                                    },
-                                    onSaved: (text){
-                                      DB.db.saveField(question.id, state.value!);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            )),
+                          alignment: Alignment.center,
+                          child: TextFormField(
+                            enabled: false,
+                            controller: TextEditingController()..text = state.value ?? "",
+                            decoration: InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.zero),
+
+                            validator: (text) {
+                              if (state.value!.isEmpty) {
+                                showError = true;
+                                return "Time Not selected";
+                              }
+                            },
+                            style:
+                            TextStyle(fontSize: timeOptionModel.size!),
+                            onSaved: (text) {
+                              DB.db.saveField(question.id, state.value!);
+                            },
+                          ),
+                        ),
                       ),
                     ),
                   ],

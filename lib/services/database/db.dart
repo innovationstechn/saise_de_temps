@@ -1,18 +1,28 @@
 import 'package:saise_de_temps/models/credidentals_model.dart';
+import 'package:saise_de_temps/models/form_element_model.dart';
 
 import 'hive_db.dart';
 
 abstract class DB {
   static final db = HiveDB();
 
-  Future<bool?> addForm();
+  Future<bool?> addUserResponse();
+  Future<List<Map>> getUserResponses();
+  Future clearUserResponses();
 
-  Future<bool?> hasForms();
+  Future<int> countForms();
 
-  Future clear();
+  Future<void> saveConfigData(List<FormElementModel> formsElements);
+  Future<List<FormElementModel>?> getConfigData();
+
+  Future<void> saveLastConfigFetchTime(DateTime timestamp);
+  Future<DateTime?> getLastConfigFetchTime();
+
+  Future<void> saveIPAddress(String address);
+  Future<String?> getIPAddress();
 
   void saveField(int? id, String? field);
 
-  Future<void> saveCredentials(CredentialsModel credentials);
-  Future<CredentialsModel?> getCredentials();
+  Future<void> saveAuthCredentials(CredentialsModel credentials);
+  Future<CredentialsModel?> getAuthCredentials();
 }
