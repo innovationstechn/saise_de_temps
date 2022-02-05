@@ -12,10 +12,15 @@ class LoginVM extends BaseViewModel {
   CredentialsModel? _credentials;
   CredentialsModel? get credentials => _credentials;
 
-  Future<void> loadPreviousCredentials() async {
+  String? _ipAddress;
+  String? get ipAddress => _ipAddress;
+
+  Future<void> initialize() async {
     Future<void> _load() async {
       try {
         _credentials = await DB.db.getAuthCredentials();
+        _ipAddress = await DB.db.getIPAddress() ?? API_DEFAULT_ADDRESS;
+        _ipAddress = 'http://$_ipAddress/get_logo';
       } catch(e) {
         setError('Could not load previous credentials.');
         log(e.toString());

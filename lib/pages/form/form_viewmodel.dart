@@ -16,12 +16,18 @@ class FormPageVM extends BaseViewModel {
 
   List<FormElementModel> get questions => _questions;
 
+  int _stagedFiles = 0;
+  int get stagedFiles => _stagedFiles;
+
   Future<void> loadData() async {
     Future<void> _loadData() async {
       try {
         clearErrors();
 
         _questions = await API.api.getConfig();
+
+        _stagedFiles = await DB.db.countForms();
+
       } on CustomException catch (e) {
         Utils.showSnackbar(e.toString());
       } catch (e) {
@@ -61,6 +67,9 @@ class FormPageVM extends BaseViewModel {
         setError('Error while loading data.');
         log(e.toString());
       } finally {
+
+        _stagedFiles = await DB.db.countForms();
+
         notifyListeners();
       }
     }());
@@ -72,6 +81,10 @@ class FormPageVM extends BaseViewModel {
         final maps = await DB.db.getUserResponses();
 
         await API.api.submit(data: maps);
+
+        await DB.db.clearUserResponses();
+
+        _stagedFiles = await DB.db.countForms();
       } catch (e) {
         Utils.showSnackbar(e.toString());
       }

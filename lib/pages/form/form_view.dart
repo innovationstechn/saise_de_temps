@@ -100,7 +100,7 @@ class FormView extends StatelessWidget {
                             const CircularProgressIndicator(
                               color: primaryColor,
                             ),
-                          buildExtraOptionsTray(
+                          buildExtraOptionsTray(formVM.stagedFiles,
                               formVM.resync, formVM.onSettingsPressed),
                         ],
                       ),
@@ -159,8 +159,8 @@ class FormView extends StatelessWidget {
         ),
       );
 
-  Widget buildExtraOptionsTray(
-          void Function() onResyncTap, Future Function() onSettingsTap) =>
+  Widget buildExtraOptionsTray(int stagedFileCount, void Function() onResyncTap,
+          Future Function() onSettingsTap) =>
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 2),
         child: Row(
@@ -170,21 +170,36 @@ class FormView extends StatelessWidget {
               child: ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(
-                    primaryColor,
+                    stagedFileCount != 0 ? primaryColor : Colors.grey,
                   ),
                   foregroundColor: MaterialStateProperty.all(
                     Colors.white,
                   ),
                 ),
-                onPressed: () => onResyncTap(),
+                onPressed: stagedFileCount != 0 ? () => onResyncTap() : null,
+                onLongPress: stagedFileCount != 0 ? () => onResyncTap() : null,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.sync),
-                    SizedBox(
+                  children: [
+                    const Icon(Icons.sync),
+                    const SizedBox(
                       width: 5,
                     ),
-                    Text('FORCE RESYNC'),
+                    const Text('FORCE RESYNC'),
+                    if (stagedFileCount != 0)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(stagedFileCount.toString()),
+                          const SizedBox(
+                            width: 3,
+                          ),
+                          const Icon(Icons.file_copy),
+                        ],
+                      ),
                   ],
                 ),
               ),

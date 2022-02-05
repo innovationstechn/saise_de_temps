@@ -22,7 +22,7 @@ class HiveDB implements DB {
 
   @override
   Future clearUserResponses() async {
-    _formsBox!.clear();
+    return await _formsBox!.clear();
   }
 
   @override
@@ -65,11 +65,15 @@ class HiveDB implements DB {
 
   @override
   Future<CredentialsModel?> getAuthCredentials() async {
-    return CredentialsModel.fromJson(
-      Map<String, dynamic>.from(
-        _credentialsBox!.get('credentials'),
-      ),
-    );
+    final credentials = _credentialsBox!.get('credentials');
+
+    if (credentials != null) {
+      return CredentialsModel.fromJson(
+        Map<String, dynamic>.from(
+          _credentialsBox!.get('credentials'),
+        ),
+      );
+    }
   }
 
   @override
