@@ -53,7 +53,10 @@ class TextFormWidget extends FormField<String> {
                         controller: textEditingController,
                         validator: (text) {
                           if (text!.isEmpty) {
-                            return "Field should not be empty";
+                            if(textOptionModel.required!){
+                              return "Field should not be empty";
+                            }
+                            return null;
                           } else {
                             if(text.length<textOptionModel.minLength!) {
                              return "Text length should be greater then"+textOptionModel.minLength!.toString();

@@ -76,31 +76,28 @@ class _LoginViewState extends State<LoginView> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              SizedBox(
-                                width: 100.w,
-                                child: TextFormField(
-                                  focusNode: passFN,
-                                  obscureText: true,
-                                  controller: passwordController,
-                                  onFieldSubmitted: (_) =>
-                                      FocusScope.of(context)
-                                          .requestFocus(loginFN),
-                                  validator: (text) {
-                                    if (text!.isEmpty) {
-                                      FocusScope.of(context)
-                                          .requestFocus(passFN);
-                                      return "Password is empty";
-                                    }
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: "Enter your password",
-                                    contentPadding:
-                                        const EdgeInsets.fromLTRB(12, 0, 20, 0),
-                                    errorStyle: const TextStyle(
-                                        color: Colors.redAccent, fontSize: 12),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(5.0),
-                                    ),
+                              TextFormField(
+                                focusNode: passFN,
+                                obscureText: true,
+                                controller: passwordController,
+                                onFieldSubmitted: (_) =>
+                                    FocusScope.of(context)
+                                        .requestFocus(loginFN),
+                                validator: (text) {
+                                  if (text!.isEmpty) {
+                                    FocusScope.of(context)
+                                        .requestFocus(passFN);
+                                    return "Password is empty";
+                                  }
+                                },
+                                decoration: InputDecoration(
+                                  hintText: "Enter your password",
+                                  contentPadding:
+                                      const EdgeInsets.fromLTRB(12, 0, 20, 0),
+                                  errorStyle: const TextStyle(
+                                      color: Colors.redAccent, fontSize: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
                                   ),
                                 ),
                               ),
