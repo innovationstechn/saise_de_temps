@@ -98,13 +98,15 @@ class DropDownFormField extends FormField<String> {
                         width: 0,
                         child: TextFormField(
                           validator: (text) {
-                            if (state.value == null) {
-                              showError = true;
-                              return "Not valid";
+                            if(dropDownOptionModel.required!){
+                              if (state.value == null) {
+                                showError = true;
+                                return "Not valid";
+                              }
                             }
                           },
                           onSaved: (text){
-                            DB.db.saveField(question.id,state.value!);
+                            DB.db.saveField(question.id,state.value??"");
                           },
                         ),
                       ),

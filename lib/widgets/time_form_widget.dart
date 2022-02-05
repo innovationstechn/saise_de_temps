@@ -70,8 +70,10 @@ class TimeSelectionFormField extends FormField<String> {
 
                             validator: (text) {
                               if (state.value!.isEmpty) {
-                                showError = true;
-                                return "Time Not selected";
+                                if(timeOptionModel.required!){
+                                  showError = true;
+                                  return "Time Not selected";
+                                }
                               }
                             },
                             style:
