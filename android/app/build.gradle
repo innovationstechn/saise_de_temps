@@ -45,7 +45,8 @@ android {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.example.saise_de_temps.saise_de_temps"
         minSdkVersion 22
-        targetSdkVersion 30
+        targetSdkVersion 31
+        compileSdkVersion 31
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }

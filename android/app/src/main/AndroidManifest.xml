@@ -2,7 +2,7 @@
     package="com.example.saise_de_temps.saise_de_temps">
    <application
         android:label="saise_de_temps"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"
