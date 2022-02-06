@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.saise_de_temps.saise_de_temps">
    <application
-        android:label="saise_de_temps"
+        android:label="TimeForm"
         android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"

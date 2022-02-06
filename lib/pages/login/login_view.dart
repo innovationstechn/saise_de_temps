@@ -308,14 +308,14 @@ class _LoginViewState extends State<LoginView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
             Text(
-              'Saise-De-Temps',
+              'TimeForm',
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
             SizedBox(
               height: 10,
             ),
             Text(
-              'v0.0.1',
+              'v1.0.0',
               style: TextStyle(color: Colors.white, fontSize: 14),
             ),
           ],

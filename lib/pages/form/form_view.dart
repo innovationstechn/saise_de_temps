@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:saise_de_temps/constants/colors.dart';
 import 'package:saise_de_temps/models/checkbox_options_model.dart';
 import 'package:saise_de_temps/models/form_element_model.dart';
@@ -73,6 +74,9 @@ class FormView extends StatelessWidget {
                                   return TimeSelectionFormField(
                                     question: item,
                                     context: context,
+                                    initialValue: DateFormat("H'h'm'm'").format(
+                                      DateTime.now(),
+                                    ),
                                   );
                                 case FormElementType.multiple:
                                   return DropDownFormField(
@@ -243,14 +247,14 @@ class FormView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
             Text(
-              'Saise-De-Temps',
+              'TimeForm',
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
             SizedBox(
               height: 10,
             ),
             Text(
-              'v0.0.1',
+              'v1.0.0',
               style: TextStyle(color: Colors.white, fontSize: 14),
             ),
           ],
